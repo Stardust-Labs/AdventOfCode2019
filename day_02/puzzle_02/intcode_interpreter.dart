@@ -1,12 +1,17 @@
 class IntcodeInterpreter {
-  final String initialIntcode;
+  List<int> initialIntcode;
   List<int> intcode;
 
   int _cursorPosition;
   bool _hasRun;
 
-  IntcodeInterpreter(this.initialIntcode) {
-    reset();
+  IntcodeInterpreter(String input) {
+    List<String> intvals = input.split(',');
+    _hasRun = false;
+
+    initialIntcode = [];
+    intvals.forEach((intval) => initialIntcode.add(int.parse(intval)));
+    intcode = List.from(initialIntcode);
   }
 
   /**
@@ -127,11 +132,8 @@ class IntcodeInterpreter {
   }
 
   void reset() {
-    List<String> intvals = initialIntcode.split(',');
-    intcode = [];
     _hasRun = false;
-
-    intvals.forEach((intval) => intcode.add(int.parse(intval)));
+    intcode = List.from(initialIntcode);
   }
 }
 

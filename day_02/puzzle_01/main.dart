@@ -1,11 +1,23 @@
+import 'dart:io';
+
 import './intcode_interpreter.dart';
 
 void main() {
-  String testIntcode = '1,9,10,3,2,3,11,0,99,30,40,50';
+  File input = new File('./input');
+  String inputIntcode = input.readAsStringSync();
 
-  IntcodeInterpreter interpreter = new IntcodeInterpreter(testIntcode);
+  IntcodeInterpreter interpreter = new IntcodeInterpreter(inputIntcode);
+
+  interpreter.intcode[1] = 12;
+  interpreter.intcode[2] = 2;
+
+  print(interpreter.intcode);
 
   interpreter.run();
 
-  print(interpreter.intcode);
+  File output = new File('./output');
+  output.writeAsStringSync(interpreter.intcode.join(','));
+
+  File answer = new File('./answer');
+  answer.writeAsStringSync(interpreter.intcode[0].toString());
 }
