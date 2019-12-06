@@ -37,3 +37,31 @@ class Wire {
     //
   }
 }
+
+class WireBox {
+  Set<Wire> wires;
+  Set<Coordinate> coordinates;
+  Set<Coordinate> intersections;
+
+  WireBox () {
+    wires = new Set<Wire>();
+    coordinates = new Set<Coordinate>();
+    intersections = new Set<Coordinate>();
+  }
+
+  Wire addWire (String instructions) {
+    Wire newWire = new Wire(instructions);
+    wires.add(newWire);
+
+    newWire.coordinates.forEach((coordinate) {
+      if (coordinates.contains(coordinate) && !intersections.contains(coordinate)) {
+        intersections.add(coordinate);
+      };
+      if (!coordinates.contains(coordinate)) {
+        coordinates.add(coordinate);
+      }
+    });
+
+    return newWire;
+  }
+}
