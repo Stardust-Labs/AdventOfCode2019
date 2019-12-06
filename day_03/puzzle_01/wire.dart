@@ -4,6 +4,15 @@ class Coordinate {
 
   Coordinate(this.x, this.y);
 
+  @override
+  bool operator ==(o) => o is Coordinate && o.x == x && o.y == y;
+
+  @override
+  int get hashCode => 'x-val${x}'.hashCode ^ 'y-val${y}'.hashCode;
+
+  @override
+  String toString() => '(${x}, ${y})';
+
   static int manhattanDistance(Coordinate a, Coordinate b) {
     int lat, lon;
 
@@ -30,7 +39,8 @@ class Coordinate {
 }
 
 class Wire {
-  List<Coordinate> coordinates;
+  Set<Coordinate> coordinates;
+  List<Coordinate> wirePath;
   Coordinate _latestCoordinate;
 
   final Set<String> validDirections = {
@@ -40,7 +50,8 @@ class Wire {
   Wire(String instructions) {
     List<String> instructionList = instructions.split(',');
     _latestCoordinate = new Coordinate(0,0);
-    coordinates = [];
+    coordinates = {};
+    wirePath = [];
 
     instructionList.forEach((instruction) => runInstruction(instruction));
   }
@@ -59,25 +70,33 @@ class Wire {
     switch(direction) {
       case 'U':
         for (int newY = 1; newY <= magnitude; newY++) {
-          coordinates.add(new Coordinate(_latestCoordinate.x, _latestCoordinate.y + newY));
+          Coordinate newCoord = new Coordinate(_latestCoordinate.x, _latestCoordinate.y + newY);
+          coordinates.add(newCoord);
+          wirePath.add(newCoord);
         }
         _latestCoordinate = new Coordinate(_latestCoordinate.x, _latestCoordinate.y + magnitude);
         break;
       case 'D':
         for (int newY = 1; newY <= magnitude; newY++) {
-          coordinates.add(new Coordinate(_latestCoordinate.x, _latestCoordinate.y - newY));
+          Coordinate newCoord = new Coordinate(_latestCoordinate.x, _latestCoordinate.y - newY);
+          coordinates.add(newCoord);
+          wirePath.add(newCoord);
         }
         _latestCoordinate = new Coordinate(_latestCoordinate.x, _latestCoordinate.y - magnitude);
         break;
       case 'R':
         for (int newX = 1; newX <= magnitude; newX++) {
-          coordinates.add(new Coordinate(_latestCoordinate.x + newX, _latestCoordinate.y));
+          Coordinate newCoord = new Coordinate(_latestCoordinate.x + newX, _latestCoordinate.y);
+          coordinates.add(newCoord);
+          wirePath.add(newCoord);
         }
         _latestCoordinate = new Coordinate(_latestCoordinate.x + magnitude, _latestCoordinate.y);
         break;
       case 'L':
         for (int newX = 1; newX <= magnitude; newX++) {
-          coordinates.add(new Coordinate(_latestCoordinate.x - newX, _latestCoordinate.y));
+          Coordinate newCoord = new Coordinate(_latestCoordinate.x - newX, _latestCoordinate.y);
+          coordinates.add(newCoord);
+          wirePath.add(newCoord);
         }
         _latestCoordinate = new Coordinate(_latestCoordinate.x - magnitude, _latestCoordinate.y);
         break;
