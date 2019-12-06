@@ -33,8 +33,55 @@ class Wire {
   List<Coordinate> coordinates;
   Coordinate _latestCoordinate;
 
+  final Set<String> validDirections = {
+    'U', 'D', 'R', 'L'
+  };
+
   Wire(String instructions) {
-    //
+    List<String> instructionList = instructions.split(',');
+    _latestCoordinate = new Coordinate(0,0);
+    coordinates = [];
+
+    instructionList.forEach((instruction) => runInstruction(instruction));
+  }
+
+  void runInstruction(String instruction) {
+    String direction = instruction.substring(0, 1);
+    int magnitude = int.parse(instruction.substring(1, instruction.length));
+
+    if (!validDirections.contains(direction)) {
+      throw Exception('Invalid direction in ${instruction}');
+    }
+    if (!(magnitude > 0)) {
+      throw Exception('Invalid magnitude in ${instruction}');
+    }
+
+    switch(direction) {
+      case 'U':
+        for (int newY = 1; newY <= magnitude; newY++) {
+          coordinates.add(new Coordinate(_latestCoordinate.x, _latestCoordinate.y + newY));
+        }
+        _latestCoordinate = new Coordinate(_latestCoordinate.x, _latestCoordinate.y + magnitude);
+        break;
+      case 'D':
+        for (int newY = 1; newY <= magnitude; newY++) {
+          coordinates.add(new Coordinate(_latestCoordinate.x, _latestCoordinate.y - newY));
+        }
+        _latestCoordinate = new Coordinate(_latestCoordinate.x, _latestCoordinate.y - magnitude);
+        break;
+      case 'R':
+        for (int newX = 1; newX <= magnitude; newX++) {
+          coordinates.add(new Coordinate(_latestCoordinate.x + newX, _latestCoordinate.y));
+        }
+        _latestCoordinate = new Coordinate(_latestCoordinate.x + magnitude, _latestCoordinate.y);
+        break;
+      case 'L':
+        for (int newX = 1; newX <= magnitude; newX++) {
+          coordinates.add(new Coordinate(_latestCoordinate.x - newX, _latestCoordinate.y));
+        }
+        _latestCoordinate = new Coordinate(_latestCoordinate.x - magnitude, _latestCoordinate.y);
+        break;
+    }
   }
 }
 
