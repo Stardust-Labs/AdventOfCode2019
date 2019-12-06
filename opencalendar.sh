@@ -3,6 +3,7 @@
 mkdir "day_$1"
 mkdir "day_$1/puzzle_01"
 mkdir "day_$1/puzzle_02"
+mkdir "day_$1/resources"
 
 cat > ./day_$1/README.md <<- EOM
 # Day $1 -
