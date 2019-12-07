@@ -12,6 +12,7 @@ class Opcode {
    * 2 - Multiply the values in param1 and param2 and move the product to param3
    * 3 - Move input value to param1
    * 4 - Output value at param1
+   * 99 - Terminate program
    */
   final List<int> _validInstructions = [
     1,
@@ -26,7 +27,8 @@ class Opcode {
     3: 1,
     4: 1
   };
-  Map<int, int> get paramCount => _operantParamCounts;
+  Map<int, int> get paramCounts => _operantParamCounts;
+  int params;
 
   Opcode(int inputCode) {
     String code = inputCode.toString();
@@ -36,9 +38,11 @@ class Opcode {
       throw OpcodeException('Invalid opcode ${inputCode}');
     }
 
-    code = code.padLeft(_operantParamCounts[_instruction]+2, '0');
+    params = _operantParamCounts[_instruction];
 
-    for (int ii = _operantParamCounts[_instruction]; ii > 0; ii--) {
+    code = code.padLeft(params+2, '0');
+
+    for (int ii = params; ii > 0; ii--) {
       _parameterModes.add(
         int.parse(code.substring(ii, ii+1))
       );
@@ -51,7 +55,7 @@ class Opcode {
  */
 class Parameter {
   int mode;
-  int value;
+  int address;
 
   /**
    * Valid modes are:
@@ -63,7 +67,7 @@ class Parameter {
     1
   ];
 
-  Parameter(this.mode, this.value) {
+  Parameter(this.mode, this.address) {
     if (!_validModes.contains(mode)) throw IntcodeRuntimeError('Invalid mode');
   }
 }

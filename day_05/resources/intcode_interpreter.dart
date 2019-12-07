@@ -5,14 +5,24 @@ import './intcode_errors.dart';
 class IntcodeInterpreter {
   List<int> memory;
 
+  int stdin;
+  List<int> stdinHistory;
+
   int stdout;
   List<int> stdoutHistory;
 
   int _instructionPointer;
 
   IntcodeInterpreter() {
+    stdinHistory = [];
     stdoutHistory = [];
   }
+
+  /**
+   * Advances the Instruction Pointer to the next opcode after 
+   * an opcode has been executed.
+   */
+  void advancePointer(Opcode opcode) => _instructionPointer += opcode.params + 1;
 
   /**
    * Returns the address index defined by the value
@@ -21,28 +31,44 @@ class IntcodeInterpreter {
   int parseAddress(int address) => memory[address];
 
   /**
+   * Returns the value pointed to by a given [param],
+   * accounting for parameter mode.
+   */
+  int parseValue(Parameter param) {
+    if (param.mode == 0) {
+      return memory[parseAddress(param.address)];
+    } else if (param.mode == 1) {
+      return memory[param.address];
+    } else {
+      throw IntcodeInterpretationException('Unsupported parameter mode.');
+    }
+  }
+
+  /**
    * Perform the addition function triggered by opcode 1.
    * 
    * Adds the values found at the next two positions and
    * writes the sum to the third position, then advances
    * the cursor to the next opcode.
    */
-  void _opcodeAdd(int mode) {
+  void _opcodeAdd(Opcode opcode) {
     // Check indexes and validate
-    List<int> positions = [
-      _instructionPointer + 1,
-      _instructionPointer + 2,
-      _instructionPointer + 3
-    ];
-    positions.forEach((cursorPos) => _validatePosition(cursorPos));
+    List<Parameter> parameters = [];
+    for (int ii = 0; ii < opcode.params; ii++) {
+      parameters.add(new Parameter(opcode.parameterModes[ii], _instructionPointer + ii + 1));
+    }
+    parameters.forEach((parameter) => _validatePosition(parameter.address));
 
     // Perform the addition and write to given position
-    int addendOne = memory[parseAddress(positions[0])];
-    int addendTwo = memory[parseAddress(positions[1])];
-    memory[parseAddress(positions[2])] = addendOne + addendTwo;
+    int addendOne = parseValue(parameters[0]);
+    int addendTwo = parseValue(parameters[1]);
 
-    // Step cursor to next opcode
-    _instructionPointer += 4;
+    if (parameters[2].mode != 0) {
+      throw IntcodeInterpretationException('Immediate mode not supported for addition param 3');
+    }
+    memory[parseAddress(parameters[2].address)] = addendOne + addendTwo;
+
+    advancePointer(opcode);
   }
 
   /**
@@ -52,30 +78,54 @@ class IntcodeInterpreter {
    * writes the product to the third position, then advances
    * the cursor the the next opcode.
    */
-  void _opcodeMultiply(int mode) {
+  void _opcodeMultiply(Opcode opcode) {
     // Check indexes and validate
-    List<int> positions = [
-      _instructionPointer + 1,
-      _instructionPointer + 2,
-      _instructionPointer + 3
-    ];
-    positions.forEach((cursorPos) => _validatePosition(cursorPos));
+    List<Parameter> parameters = [];
+    for (int ii = 0; ii < opcode.params; ii++) {
+      parameters.add(new Parameter(opcode.parameterModes[ii], _instructionPointer + ii + 1));
+    }
+    parameters.forEach((parameter) => _validatePosition(parameter.address));
 
     // Perform the multiplication and write to given position
-    int factorOne = memory[parseAddress(positions[0])];
-    int factorTwo = memory[parseAddress(positions[1])];
-    memory[parseAddress(positions[2])] = factorOne * factorTwo;
+    int factorOne = parseValue(parameters[0]);
+    int factorTwo = parseValue(parameters[1]);
 
-    // Step cursor to next opcode
-    _instructionPointer += 4;
+    if (parameters[2].mode != 0) {
+      throw IntcodeInterpretationException('Immediate mode not supported for multiplication param 3');
+    }
+    memory[parseAddress(parameters[2].address)] = factorOne * factorTwo;
+
+    advancePointer(opcode);
   }
 
-  void _opcodeStore(int mode) {
-    //
+  /**
+   * Stores the instruction's input in the memory address
+   * define by the first intcode parameter.
+   */
+  void _opcodeStore(Opcode opcode) {
+    if (stdin == null ) {
+      throw IntcodeInterpretationException('Storage operation requires input.');
+    }
+    Parameter storageLocation = new Parameter(opcode.parameterModes[0], _instructionPointer + 1);
+    if (storageLocation.mode != 0) {
+      throw IntcodeInterpretationException('Immediate mode not supported for storage operation');
+    }
+    _validatePosition(storageLocation.address);
+    memory[parseAddress(storageLocation.address)] = stdin;
+
+    advancePointer(opcode);
   }
 
-  void _opcodeOutput(int mode) {
-    //
+  /**
+   * Outputs the value designated by the opcode's first parameter.
+   */
+  void _opcodeOutput(Opcode opcode) {
+    Parameter output = new Parameter(opcode.parameterModes[0], _instructionPointer + 1);
+    _validatePosition(output.address);
+    stdout = parseValue(output);
+    stdoutHistory.add(parseValue(output));
+
+    advancePointer(opcode);
   }
 
   /**
@@ -98,8 +148,12 @@ class IntcodeInterpreter {
     }
   }
 
-  Intcode run(Intcode intcode) {
+  Intcode run(Intcode intcode, {int input=null}) {
 
+    if (input != null) {
+      stdin = input;
+      stdinHistory.add(input);
+    }
     // Intcode that has parsed will almost certainly contain
     // invalid opcodes, so this function should only ever be
     // called once.
@@ -114,21 +168,19 @@ class IntcodeInterpreter {
 
     execution: while (_instructionPointer < memory.length) {
       // parse the thing
-      int opcode = memory[_instructionPointer];
-      int mode = (opcode / 1000).floor();
-      int instruction = opcode % 1000;
-      switch (instruction) {
+      Opcode opcode = Opcode(memory[_instructionPointer]);
+      switch (opcode.instruction) {
         case 1:
-          _opcodeAdd(mode);
+          _opcodeAdd(opcode);
           break;
         case 2:
-          _opcodeMultiply(mode);
+          _opcodeMultiply(opcode);
           break;
         case 3:
-          _opcodeStore(mode);
+          _opcodeStore(opcode);
           break;
         case 4:
-          _opcodeOutput(mode);
+          _opcodeOutput(opcode);
           break;
         case 99:
           cleanExit = true;
