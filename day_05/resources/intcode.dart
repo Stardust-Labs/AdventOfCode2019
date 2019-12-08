@@ -18,4 +18,9 @@ class Intcode {
     code = List.from(newCode);
     _hasRun = true;
   }
+
+  void reset() {
+    code = List.from(initialCode);
+    _hasRun = false;
+  }
 }
