@@ -119,7 +119,9 @@ class IntcodeInterpreter {
    */
   void _opcodeOutput(Opcode opcode) {
     Parameter output = new Parameter(opcode.parameterModes[0], _instructionPointer + 1);
-    _validatePosition(output.address);
+    if (output.mode == 0) {
+      _validatePosition(output.address);
+    }
     stdout = parseValue(output);
     stdoutHistory.add(parseValue(output));
 

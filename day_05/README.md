@@ -126,4 +126,5 @@ Interpreter's memory upon program completion.
 Interpreter's stdout upon program completion, which will be a diagnostic code.
 
 ### Result:
+Successfully got diagnostic code from given input after testing and revision with given sample intcodes.
 
