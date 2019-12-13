@@ -9,6 +9,9 @@ void main() {
 
   int checksum = orbitMap.checksum();
 
+  File output = new File('./output');
+  output.writeAsStringSync(orbitMap.toJson());
+
   File answer = new File('./answer');
   answer.writeAsStringSync(checksum.toString());
 }
