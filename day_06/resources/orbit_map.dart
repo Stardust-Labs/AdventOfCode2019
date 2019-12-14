@@ -1,56 +1,50 @@
 import 'dart:convert';
+import './orbit_node.dart';
 
 class OrbitMap {
 
   List<String> coordinates;
-  Map nodes;
+  Map<String, List<String>> nodes;
+  OrbitNode centerOfMass;
 
   // Base node should always be COM
   OrbitMap(this.coordinates) {
     nodes = {};
-    populateMap('COM', []);
-  }
-
-  /**
-   * Introspects the node tree and reports the total
-   * number of orbits contained therein.
-   */
-  int countNodes() {
-    return 0;
+    populateMap('COM');
   }
 
   /**
    * Alias for countNodes
    */
   int checksum() {
-    return countNodes();
+    return centerOfMass.getNodeChecksum();
   }
 
   List<String> _searchCoords(String parent) {
-    return List.from(coordinates.where((el) => el.startsWith(parent)));
+    return List.from(coordinates.where((el) => el.startsWith("${parent})")));
   }
 
-  void populateMap(String body, List<String> mapPath) {
-    Map cwd = Map.from(nodes);
-    for (int ii = 0; ii < mapPath.length; ii++) {
-      cwd = cwd[mapPath[ii]];
+  void populateMap(String body, [OrbitNode parent=null]) {
+    OrbitNode currentNode = new OrbitNode(body, parent);
+
+    if (parent != null) {
+      parent.addChild(currentNode);
+    } else {
+      centerOfMass = currentNode;
     }
 
-    print("CWD: ${json.encode(cwd)}");
-
-    cwd[body] = {'children': []};
     _searchCoords(body).forEach((child) {
-      print("FOUNDCHILD: ${child}");
       String childBody = child.split(')')[1];
-      cwd[body]['children'].add(childBody);
-      List<String> nextPath = List.from(mapPath);
-      nextPath.add(childBody);
-      print("NEXTPATH: ${json.encode(nextPath)}");
-      populateMap(childBody, nextPath);
+      populateMap(childBody, currentNode);
     });
   }
 
-  String toJson() {
-    return json.encode(nodes);
+  OrbitNode search(String query) {
+    return centerOfMass.search(query);
+  }
+
+  int transferDistance(OrbitNode aa, OrbitNode bb) {
+    //
+    return 0;
   }
 }
